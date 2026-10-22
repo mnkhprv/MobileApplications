@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Unit Converter</string>
+    <string name="unit_converter">Unit Converter</string>
+    <string name="converter">Converter</string>
+    <string name="search_unit">Search unit</string>
+    <string name="no_units_found">No matching categories</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="value">Value</string>
+    <string name="result">Result</string>
+    <string name="invalid_number">Enter a valid number</string>
+    <string name="negative_value_error">Negative values are allowed only for temperature</string>
+    <string name="zero_undefined_error">This fuel conversion is undefined for zero</string>
+    <string name="app_logo_description">Unit Converter logo</string>
+    <string name="history_description">Conversion history</string>
+    <string name="history_empty">No conversions yet</string>
+    <string name="back_description">Back to unit categories</string>
+    <string name="swap_description">Swap source and target units</string>
+    <string name="open_category_description">Open %1$s converter</string>
+
+    <!-- Ханш хөрвүүлэгч (midterm) -->
+    <string name="money_converter">Ханш хөрвүүлэгч</string>
+    <string name="money_title">МОНГОЛ БАНКНЫ\nВАЛЮТЫН ХАНШ</string>
+    <string name="money_convert">Хөрвүүлэх</string>
+    <string name="money_mnt">MNT</string>
+    <string name="money_amount_hint">Дүн</string>
+    <string name="money_invalid_amount">Зөв дүн оруулна уу</string>
+</resources>

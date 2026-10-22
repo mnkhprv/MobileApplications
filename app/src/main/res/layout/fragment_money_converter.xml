@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/money_background"
+    android:fillViewport="true"
+    tools:context=".midterm.MoneyConverterFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingTop="40dp"
+        android:paddingBottom="24dp">
+
+        <TextView
+            android:id="@+id/from_flag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="90sp"
+            tools:text="🇪🇺" />
+
+        <Spinner
+            android:id="@+id/currency_spinner"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/money_text"
+            android:popupBackground="@color/money_background" />
+
+        <EditText
+            android:id="@+id/amount_input"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/money_text_dark"
+            android:gravity="center"
+            android:hint="@string/money_amount_hint"
+            android:importantForAutofill="no"
+            android:inputType="numberDecimal"
+            android:maxLength="15"
+            android:textColor="@color/money_text_dark"
+            android:textColorHint="@color/money_hint"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/convert_button"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="60dp"
+            android:text="@string/money_convert"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/money_button"
+            app:cornerRadius="4dp" />
+
+        <TextView
+            android:id="@+id/result_text"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="60dp"
+            android:gravity="center"
+            android:minHeight="28dp"
+            android:textColor="@color/money_text_dark"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            tools:text="570,078" />
+
+        <View
+            android:layout_width="160dp"
+            android:layout_height="1dp"
+            android:background="@color/money_text_dark" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/money_mnt"
+            android:textColor="@color/money_text_dark"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🇲🇳"
+            android:textSize="90sp"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/splashFragment">
+
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.example.lab1.SplashFragment"
+        android:label="@string/unit_converter"
+        tools:layout="@layout/fragment_splash">
+
+        <action
+            android:id="@+id/action_splashFragment_to_categoriesFragment"
+            app:destination="@id/categoriesFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/categoriesFragment"
+        android:name="com.example.lab1.CategoriesFragment"
+        android:label="@string/unit_converter"
+        tools:layout="@layout/fragment_categories">
+
+        <action
+            android:id="@+id/action_categoriesFragment_to_converterFragment"
+            app:destination="@id/converterFragment" />
+        <action
+            android:id="@+id/action_categoriesFragment_to_currencyListFragment"
+            app:destination="@id/currencyListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/converterFragment"
+        android:name="com.example.lab1.ConverterFragment"
+        android:label="@string/converter"
+        tools:layout="@layout/fragment_converter">
+
+        <argument
+            android:name="categoryId"
+            app:argType="string" />
+    </fragment>
+
+    <!-- Midterm: Ханш хөрвүүлэгч -->
+    <fragment
+        android:id="@+id/currencyListFragment"
+        android:name="com.example.lab1.midterm.CurrencyListFragment"
+        android:label="@string/money_converter"
+        tools:layout="@layout/fragment_currency_list">
+
+        <action
+            android:id="@+id/action_currencyListFragment_to_moneyConverterFragment"
+            app:destination="@id/moneyConverterFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/moneyConverterFragment"
+        android:name="com.example.lab1.midterm.MoneyConverterFragment"
+        android:label="@string/money_converter"
+        tools:layout="@layout/fragment_money_converter">
+
+        <argument
+            android:name="currencyCode"
+            app:argType="string" />
+    </fragment>
+</navigation>
