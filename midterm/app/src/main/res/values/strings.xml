@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Ханш хөрвүүлэгч</string>
+    <string name="title">МОНГОЛ БАНКНЫ\nВАЛЮТЫН ХАНШ</string>
+    <string name="rate_date">Албан ханш: %1$s</string>
+    <string name="convert">Хөрвүүлэх</string>
+    <string name="mnt">MNT</string>
+    <string name="amount_hint">Дүн</string>
+    <string name="invalid_amount">Зөв дүн оруулна уу</string>
+</resources>

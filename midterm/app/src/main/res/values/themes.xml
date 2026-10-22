@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.MoneyConverter" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/title</item>
+        <item name="android:windowBackground">@color/background</item>
+    </style>
+</resources>

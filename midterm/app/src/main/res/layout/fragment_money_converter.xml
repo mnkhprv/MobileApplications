@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/money_background"
+    android:background="@color/background"
     android:fillViewport="true"
-    tools:context=".midterm.MoneyConverterFragment">
+    tools:context="com.example.moneyconverter.MoneyConverterFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -28,21 +28,21 @@
             android:layout_width="140dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:backgroundTint="@color/money_text"
-            android:popupBackground="@color/money_background" />
+            android:backgroundTint="@color/text"
+            android:popupBackground="@color/background" />
 
         <EditText
             android:id="@+id/amount_input"
             android:layout_width="160dp"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/money_text_dark"
+            android:backgroundTint="@color/text_dark"
             android:gravity="center"
-            android:hint="@string/money_amount_hint"
+            android:hint="@string/amount_hint"
             android:importantForAutofill="no"
             android:inputType="numberDecimal"
             android:maxLength="15"
-            android:textColor="@color/money_text_dark"
-            android:textColorHint="@color/money_hint"
+            android:textColor="@color/text_dark"
+            android:textColorHint="@color/hint"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -51,11 +51,11 @@
             android:layout_width="160dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="60dp"
-            android:text="@string/money_convert"
+            android:text="@string/convert"
             android:textColor="@android:color/white"
             android:textSize="17sp"
             android:textStyle="bold"
-            app:backgroundTint="@color/money_button"
+            app:backgroundTint="@color/button"
             app:cornerRadius="4dp" />
 
         <TextView
@@ -65,7 +65,7 @@
             android:layout_marginTop="60dp"
             android:gravity="center"
             android:minHeight="28dp"
-            android:textColor="@color/money_text_dark"
+            android:textColor="@color/text_dark"
             android:textSize="18sp"
             android:textStyle="bold"
             tools:text="570,078" />
@@ -73,14 +73,14 @@
         <View
             android:layout_width="160dp"
             android:layout_height="1dp"
-            android:background="@color/money_text_dark" />
+            android:background="@color/text_dark" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="@string/money_mnt"
-            android:textColor="@color/money_text_dark"
+            android:text="@string/mnt"
+            android:textColor="@color/text_dark"
             android:textSize="18sp"
             android:textStyle="bold" />
 

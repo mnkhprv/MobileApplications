@@ -1,4 +1,4 @@
-package com.example.lab1.midterm
+package com.example.moneyconverter
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,8 +7,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
-import com.example.lab1.R
-import com.example.lab1.databinding.FragmentMoneyConverterBinding
+import com.example.moneyconverter.databinding.FragmentMoneyConverterBinding
 
 // Ханш хөрвүүлэгч -2: сонгосон валютыг төгрөг рүү хөрвүүлнэ
 class MoneyConverterFragment : Fragment() {
@@ -57,7 +56,7 @@ class MoneyConverterFragment : Fragment() {
         val text = binding.amountInput.text.toString().trim().replace(',', '.')
         val amount = text.toDoubleOrNull()
         if (amount == null || amount < 0 || !amount.isFinite()) {
-            binding.amountInput.error = getString(R.string.money_invalid_amount)
+            binding.amountInput.error = getString(R.string.invalid_amount)
             binding.resultText.text = ""
             return
         }

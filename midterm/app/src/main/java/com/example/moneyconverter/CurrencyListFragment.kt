@@ -1,4 +1,4 @@
-package com.example.lab1.midterm
+package com.example.moneyconverter
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,9 +7,8 @@ import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.example.lab1.R
-import com.example.lab1.databinding.FragmentCurrencyListBinding
-import com.example.lab1.databinding.ItemCurrencyBinding
+import com.example.moneyconverter.databinding.FragmentCurrencyListBinding
+import com.example.moneyconverter.databinding.ItemCurrencyBinding
 
 // Ханш хөрвүүлэгч -1: валютын жагсаалт
 class CurrencyListFragment : Fragment() {
@@ -28,6 +27,7 @@ class CurrencyListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.rateDate.text = getString(R.string.rate_date, CurrencyList.RATE_DATE)
         for (currency in CurrencyList.items) {
             val row = ItemCurrencyBinding.inflate(layoutInflater, binding.currencyRows, false)
             row.currencyFlag.text = currency.flag

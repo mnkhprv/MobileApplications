@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/money_background"
-    tools:context=".midterm.CurrencyListFragment">
+    android:background="@color/background"
+    tools:context="com.example.moneyconverter.CurrencyListFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,16 +19,26 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="@string/money_title"
-            android:textColor="@color/money_title"
+            android:text="@string/title"
+            android:textColor="@color/title"
             android:textSize="18sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/rate_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:textColor="@color/hint"
+            android:textSize="12sp"
+            tools:text="Албан ханш: 2026-10-21" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="20dp"
-            android:background="@color/money_divider" />
+            android:background="@color/divider" />
 
         <LinearLayout
             android:id="@+id/currency_rows"

@@ -4,6 +4,6 @@
     android:layout_height="wrap_content"
     android:gravity="center"
     android:padding="10dp"
-    android:textColor="@color/money_text_dark"
+    android:textColor="@color/text_dark"
     android:textSize="18sp"
     android:textStyle="bold" />
