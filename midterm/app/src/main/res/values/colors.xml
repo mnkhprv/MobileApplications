@@ -7,4 +7,5 @@
     <color name="hint">#999999</color>
     <color name="divider">#DDDDDD</color>
     <color name="button">#A3B1E0</color>
+    <color name="flag_border">#E8452C</color>
 </resources>

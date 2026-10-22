@@ -27,9 +27,6 @@
         <action
             android:id="@+id/action_categoriesFragment_to_converterFragment"
             app:destination="@id/converterFragment" />
-        <action
-            android:id="@+id/action_categoriesFragment_to_currencyListFragment"
-            app:destination="@id/currencyListFragment" />
     </fragment>
 
     <fragment
@@ -43,26 +40,4 @@
             app:argType="string" />
     </fragment>
 
-    <!-- Midterm: Ханш хөрвүүлэгч -->
-    <fragment
-        android:id="@+id/currencyListFragment"
-        android:name="com.example.lab1.midterm.CurrencyListFragment"
-        android:label="@string/money_converter"
-        tools:layout="@layout/fragment_currency_list">
-
-        <action
-            android:id="@+id/action_currencyListFragment_to_moneyConverterFragment"
-            app:destination="@id/moneyConverterFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/moneyConverterFragment"
-        android:name="com.example.lab1.midterm.MoneyConverterFragment"
-        android:label="@string/money_converter"
-        tools:layout="@layout/fragment_money_converter">
-
-        <argument
-            android:name="currencyCode"
-            app:argType="string" />
-    </fragment>
 </navigation>

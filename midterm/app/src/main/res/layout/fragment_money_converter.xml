@@ -13,82 +13,99 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingTop="40dp"
+        android:paddingTop="80dp"
         android:paddingBottom="24dp">
 
-        <TextView
+        <ImageView
             android:id="@+id/from_flag"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="90sp"
-            tools:text="🇪🇺" />
+            android:layout_width="184dp"
+            android:layout_height="124dp"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            tools:src="@drawable/flag_eu" />
 
         <Spinner
             android:id="@+id/currency_spinner"
-            android:layout_width="140dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="@color/text"
+            android:layout_marginTop="20dp"
+            android:background="@null"
             android:popupBackground="@color/background" />
 
         <EditText
             android:id="@+id/amount_input"
-            android:layout_width="160dp"
+            android:layout_width="180dp"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/text_dark"
+            android:layout_marginTop="6dp"
+            android:background="@null"
+            android:drawableEnd="@drawable/ic_edit"
             android:gravity="center"
             android:hint="@string/amount_hint"
             android:importantForAutofill="no"
             android:inputType="numberDecimal"
             android:maxLength="15"
+            android:paddingStart="12dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:textColor="@color/text_dark"
             android:textColorHint="@color/hint"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textSize="20sp"
+            android:textStyle="bold"
+            tools:text="153.0" />
+
+        <View
+            android:layout_width="180dp"
+            android:layout_height="1dp"
+            android:background="@color/text_dark" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/convert_button"
-            android:layout_width="160dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="60dp"
+            android:layout_width="182dp"
+            android:layout_height="58dp"
+            android:layout_marginTop="96dp"
+            android:insetTop="4dp"
+            android:insetBottom="4dp"
             android:text="@string/convert"
             android:textColor="@android:color/white"
-            android:textSize="17sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             app:backgroundTint="@color/button"
             app:cornerRadius="4dp" />
 
         <TextView
             android:id="@+id/result_text"
-            android:layout_width="160dp"
+            android:layout_width="180dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="60dp"
+            android:layout_marginTop="64dp"
             android:gravity="center"
-            android:minHeight="28dp"
+            android:minHeight="30dp"
             android:textColor="@color/text_dark"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             tools:text="570,078" />
 
         <View
-            android:layout_width="160dp"
+            android:layout_width="180dp"
             android:layout_height="1dp"
             android:background="@color/text_dark" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:text="@string/mnt"
             android:textColor="@color/text_dark"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🇲🇳"
-            android:textSize="90sp"
-            tools:ignore="HardcodedText" />
+        <ImageView
+            android:layout_width="192dp"
+            android:layout_height="98dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_flag_border"
+            android:importantForAccessibility="no"
+            android:padding="2dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/flag_mn" />
     </LinearLayout>
 </ScrollView>

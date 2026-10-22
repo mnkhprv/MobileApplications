@@ -27,10 +27,9 @@ class CurrencyListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.rateDate.text = getString(R.string.rate_date, CurrencyList.RATE_DATE)
         for (currency in CurrencyList.items) {
             val row = ItemCurrencyBinding.inflate(layoutInflater, binding.currencyRows, false)
-            row.currencyFlag.text = currency.flag
+            row.currencyFlag.setImageResource(currency.flag)
             row.currencyName.text = currency.name
             row.currencyCode.text = currency.code
             row.root.setOnClickListener {

@@ -18,11 +18,4 @@
     <string name="swap_description">Swap source and target units</string>
     <string name="open_category_description">Open %1$s converter</string>
 
-    <!-- Ханш хөрвүүлэгч (midterm) -->
-    <string name="money_converter">Ханш хөрвүүлэгч</string>
-    <string name="money_title">МОНГОЛ БАНКНЫ\nВАЛЮТЫН ХАНШ</string>
-    <string name="money_convert">Хөрвүүлэх</string>
-    <string name="money_mnt">MNT</string>
-    <string name="money_amount_hint">Дүн</string>
-    <string name="money_invalid_amount">Зөв дүн оруулна уу</string>
 </resources>

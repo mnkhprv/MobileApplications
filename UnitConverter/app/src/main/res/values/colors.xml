@@ -9,12 +9,4 @@
     <color name="outline">#C7C7CD</color>
     <color name="error">#FF6B81</color>
 
-    <!-- Ханш хөрвүүлэгч (midterm) -->
-    <color name="money_background">#FFFFFF</color>
-    <color name="money_title">#1C3BB0</color>
-    <color name="money_text">#555555</color>
-    <color name="money_text_dark">#111111</color>
-    <color name="money_hint">#999999</color>
-    <color name="money_divider">#DDDDDD</color>
-    <color name="money_button">#A3B1E0</color>
 </resources>

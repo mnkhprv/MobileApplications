@@ -28,11 +28,12 @@ class MoneyConverterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         selected = CurrencyList.find(arguments?.getString(ARG_CODE)) ?: CurrencyList.items[0]
-        binding.fromFlag.text = selected.flag
+        binding.fromFlag.setImageResource(selected.flag)
 
         val codes = CurrencyList.items.map { it.code }
-        binding.currencySpinner.adapter =
-            ArrayAdapter(requireContext(), R.layout.item_currency_spinner, codes)
+        val adapter = ArrayAdapter(requireContext(), R.layout.item_currency_spinner, codes)
+        adapter.setDropDownViewResource(R.layout.item_currency_dropdown)
+        binding.currencySpinner.adapter = adapter
         binding.currencySpinner.setSelection(CurrencyList.items.indexOf(selected))
         binding.currencySpinner.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
@@ -41,7 +42,7 @@ class MoneyConverterFragment : Fragment() {
                 ) {
                     if (CurrencyList.items[position] != selected) {
                         selected = CurrencyList.items[position]
-                        binding.fromFlag.text = selected.flag
+                        binding.fromFlag.setImageResource(selected.flag)
                         binding.resultText.text = ""
                     }
                 }

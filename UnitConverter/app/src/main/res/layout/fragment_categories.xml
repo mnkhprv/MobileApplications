@@ -19,20 +19,6 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/money_button"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="14dp"
-        android:contentDescription="@string/money_converter"
-        app:icon="@drawable/ic_money"
-        app:iconSize="28dp"
-        app:iconTint="@color/text_primary"
-        app:layout_constraintBottom_toBottomOf="@id/screen_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/screen_title" />
-
-    <com.google.android.material.button.MaterialButton
         android:id="@+id/history_button"
         style="@style/Widget.Material3.Button.IconButton"
         android:layout_width="48dp"

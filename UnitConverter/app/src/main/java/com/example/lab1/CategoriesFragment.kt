@@ -37,9 +37,6 @@ class CategoriesFragment : Fragment() {
         binding.historyButton.setOnClickListener {
             Toast.makeText(requireContext(), R.string.history_empty, Toast.LENGTH_SHORT).show()
         }
-        binding.moneyButton.setOnClickListener {
-            findNavController().navigate(R.id.action_categoriesFragment_to_currencyListFragment)
-        }
     }
 
     private fun renderCategories(query: String) {

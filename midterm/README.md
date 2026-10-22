@@ -39,4 +39,6 @@ Navigation Component ашиглан сольж харуулна.
 - `CurrencyListFragment.kt`, `MoneyConverterFragment.kt` – 2 дэлгэц
 - `res/navigation/nav_graph.xml` – дэлгэц хоорондын шилжилт
 
+Тугуудын зургийг flagcdn.com сайтаас авсан (`res/drawable-nodpi`).
+
 Хоосон, буруу дүн оруулахад "Зөв дүн оруулна уу" гэсэн алдаа гарна.

@@ -8,26 +8,28 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="52dp"
+        android:layout_height="48dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="8dp"
-        android:paddingEnd="8dp">
+        android:paddingEnd="10dp">
 
-        <TextView
+        <ImageView
             android:id="@+id/currency_flag"
             android:layout_width="44dp"
-            android:layout_height="wrap_content"
-            android:textSize="26sp"
-            tools:text="🇪🇺" />
+            android:layout_height="28dp"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            tools:src="@drawable/flag_eu" />
 
         <TextView
             android:id="@+id/currency_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
             android:textColor="@color/text"
-            android:textSize="15sp"
+            android:textSize="16sp"
             tools:text="Евро" />
 
         <TextView
@@ -35,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/text"
-            android:textSize="15sp"
+            android:textSize="16sp"
             tools:text="EUR" />
     </LinearLayout>
 
