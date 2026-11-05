@@ -17,6 +17,7 @@ data class Deck(
 
 /**
  * Нэг карт. box нь Leitner хайрцгийн дугаар (1..5), needsReview нь давтах тэмдэглэгээ.
+ * imagePath нь заавал биш зураг (null бол зураггүй карт).
  * Багц устахад түүний картууд CASCADE-ээр хамт устна.
  */
 @Entity(
@@ -39,6 +40,7 @@ data class Card(
     val box: Int = Leitner.FIRST_BOX,
     val needsReview: Boolean = false,
     val lastReviewed: Long? = null,
+    val imagePath: String? = null,
 )
 
 /** Багцын жагсаалтад харуулах мэдээлэл: багц + картын тоо + статистик (SQL-ээр тооцоолно). */

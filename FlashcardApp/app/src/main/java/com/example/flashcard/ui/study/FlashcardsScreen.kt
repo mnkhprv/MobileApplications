@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -47,6 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flashcard.data.Card
 import com.example.flashcard.data.StudyFilter
 import com.example.flashcard.ui.AppViewModelProvider
+import com.example.flashcard.ui.components.CardImage
 import com.example.flashcard.ui.components.LoadingBox
 import com.example.flashcard.ui.components.SlowSpeakButton
 import com.example.flashcard.ui.components.SpeakButton
@@ -200,6 +202,11 @@ fun FlipCard(
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Зураг нүүрэн талд (term-тэй хамт) харагдана.
+                if (!showBack && card.imagePath != null) {
+                    CardImage(card.imagePath, Modifier.heightIn(max = 200.dp))
+                    Spacer(Modifier.height(16.dp))
+                }
                 Text(
                     if (showBack) "Монгол" else "Deutsch",
                     style = MaterialTheme.typography.labelLarge,

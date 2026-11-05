@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flashcard.data.StudyFilter
 import com.example.flashcard.ui.AppViewModelProvider
+import com.example.flashcard.ui.components.CardImage
 import com.example.flashcard.ui.components.LoadingBox
 import com.example.flashcard.ui.components.SlowSpeakButton
 import com.example.flashcard.ui.components.SpeakButton
@@ -141,6 +142,10 @@ private fun LearnContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
+                card.imagePath?.let {
+                    CardImage(it, Modifier.heightIn(max = 180.dp))
+                    Spacer(Modifier.height(12.dp))
+                }
                 Text("Deutsch", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(12.dp))
                 Text(card.term, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)

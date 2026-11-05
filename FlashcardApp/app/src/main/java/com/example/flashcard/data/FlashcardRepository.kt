@@ -1,5 +1,6 @@
 package com.example.flashcard.data
 
+import android.net.Uri
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 
@@ -16,7 +17,10 @@ enum class StudyFilter {
 }
 
 /** UI давхарга өгөгдлийн сантай зөвхөн энэ классаар дамжиж харьцана. */
-class FlashcardRepository(private val db: FlashcardDatabase) {
+class FlashcardRepository(
+    private val db: FlashcardDatabase,
+    private val images: ImageStorage,
+) {
     private val deckDao = db.deckDao()
     private val cardDao = db.cardDao()
 
@@ -31,17 +35,20 @@ class FlashcardRepository(private val db: FlashcardDatabase) {
     /**
      * Багц болон түүний картуудыг нэг transaction-д хадгална.
      * Хуучин картын term/definition шинэчлэгдэж, ахиц (box, needsReview) нь хэвээр үлдэнэ.
-     * Жагсаалтаас хасагдсан карт устна, шинэ карт 1-р хайрцагт орно.
+     * Жагсаалтаас хасагдсан карт (зурагтайгаа) устна, шинэ карт 1-р хайрцагт орно.
      */
-    suspend fun saveDeck(deckId: Long?, name: String, description: String, cards: List<CardDraft>): Long =
-        db.withTransaction {
+    suspend fun saveDeck(deckId: Long?, name: String, description: String, cards: List<CardDraft>): Long {
+        val keepIds = cards.mapNotNull { it.id }.toSet()
+        val removedImages = if (deckId == null) emptyList() else
+            cardDao.getCards(deckId).filter { it.id !in keepIds }.mapNotNull { it.imagePath }
+        val savedId = db.withTransaction {
             val id = if (deckId == null) {
                 deckDao.insert(Deck(name = name, description = description))
             } else {
                 deckDao.updateInfo(deckId, name, description)
                 deckId
             }
-            cardDao.deleteOthers(id, cards.mapNotNull { it.id })
+            cardDao.deleteOthers(id, keepIds.toList())
             cards.forEach { draft ->
                 if (draft.id == null) {
                     cardDao.insert(Card(deckId = id, term = draft.term, definition = draft.definition))
@@ -51,18 +58,37 @@ class FlashcardRepository(private val db: FlashcardDatabase) {
             }
             id
         }
+        removedImages.forEach(images::delete)
+        return savedId
+    }
 
-    suspend fun deleteDeck(id: Long) = deckDao.deleteById(id)
+    suspend fun deleteDeck(id: Long) {
+        val imagePaths = cardDao.getCards(id).mapNotNull { it.imagePath }
+        deckDao.deleteById(id)
+        imagePaths.forEach(images::delete)
+    }
 
-    suspend fun saveCard(deckId: Long, cardId: Long?, term: String, definition: String) {
+    /** imagePath == null бол зураггүй карт. Зураг солигдсон бол хуучин файлыг устгана. */
+    suspend fun saveCard(deckId: Long, cardId: Long?, term: String, definition: String, imagePath: String?) {
         if (cardId == null) {
-            cardDao.insert(Card(deckId = deckId, term = term, definition = definition))
+            cardDao.insert(Card(deckId = deckId, term = term, definition = definition, imagePath = imagePath))
         } else {
+            val oldImage = cardDao.getCard(cardId)?.imagePath
             cardDao.updateContent(cardId, term, definition)
+            cardDao.updateImage(cardId, imagePath)
+            if (oldImage != imagePath) images.delete(oldImage)
         }
     }
 
-    suspend fun deleteCard(id: Long) = cardDao.deleteById(id)
+    suspend fun deleteCard(id: Long) {
+        val imagePath = cardDao.getCard(id)?.imagePath
+        cardDao.deleteById(id)
+        images.delete(imagePath)
+    }
+
+    suspend fun saveImage(uri: Uri): String? = images.save(uri)
+
+    fun deleteImage(path: String?) = images.delete(path)
 
     suspend fun loadSession(deckId: Long, filter: StudyFilter, now: Long = System.currentTimeMillis()): List<Card> {
         val cards = cardDao.getCards(deckId)

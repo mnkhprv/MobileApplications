@@ -4,9 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Deck::class, Card::class], version = 1, exportSchema = false)
+@Database(entities = [Deck::class, Card::class], version = 2, exportSchema = false)
 abstract class FlashcardDatabase : RoomDatabase() {
     abstract fun deckDao(): DeckDao
     abstract fun cardDao(): CardDao
@@ -22,10 +23,18 @@ abstract class FlashcardDatabase : RoomDatabase() {
                     FlashcardDatabase::class.java,
                     "flashcards.db",
                 )
+                    .addMigrations(MIGRATION_1_2)
                     .addCallback(SeedCallback)
                     .build()
                     .also { instance = it }
             }
+    }
+
+    /** v2: картад заавал биш зураг нэмэгдсэн. Хуучин карт, ахиц хэвээр үлдэж, imagePath = NULL болно. */
+    private object MIGRATION_1_2 : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE cards ADD COLUMN imagePath TEXT")
+        }
     }
 
     /** Аппыг анх суулгахад герман хэлний жишээ багцууд үүсгэнэ (герман үг -> монгол орчуулга). */

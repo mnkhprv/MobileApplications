@@ -57,6 +57,9 @@ interface CardDao {
     @Query("UPDATE cards SET term = :term, definition = :definition WHERE id = :id")
     suspend fun updateContent(id: Long, term: String, definition: String)
 
+    @Query("UPDATE cards SET imagePath = :imagePath WHERE id = :id")
+    suspend fun updateImage(id: Long, imagePath: String?)
+
     @Query("UPDATE cards SET box = :box, needsReview = :needsReview, lastReviewed = :lastReviewed WHERE id = :id")
     suspend fun updateProgress(id: Long, box: Int, needsReview: Boolean, lastReviewed: Long?)
 

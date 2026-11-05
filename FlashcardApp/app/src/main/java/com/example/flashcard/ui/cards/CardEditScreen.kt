@@ -1,6 +1,11 @@
 package com.example.flashcard.ui.cards
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flashcard.data.Leitner
 import com.example.flashcard.ui.AppViewModelProvider
+import com.example.flashcard.ui.components.CardImage
 import com.example.flashcard.ui.components.LoadingBox
 import com.example.flashcard.ui.components.SpeakButton
 import com.example.flashcard.data.SpeechStatus
@@ -48,6 +54,10 @@ fun CardEditScreen(
 ) {
     val uiState = viewModel.uiState
     val speechStatus by viewModel.speechStatus.collectAsStateWithLifecycle()
+    // Android Photo Picker: зөвшөөрөл (permission) шаардахгүй.
+    val pickImage = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+        if (uri != null) viewModel.onImagePicked(uri)
+    }
 
     LaunchedEffect(uiState.done) {
         if (uiState.done) onDone()
@@ -103,6 +113,30 @@ fun CardEditScreen(
                 supportingText = errorText(uiState.definitionError),
                 minLines = 3,
             )
+
+            // Зураг заавал биш.
+            val imagePath = uiState.imagePath
+            if (imagePath != null) {
+                CardImage(imagePath, Modifier.fillMaxWidth().heightIn(max = 220.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { pickImage.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) }) {
+                        Text("Зураг солих")
+                    }
+                    TextButton(onClick = viewModel::removeImage) {
+                        Text("Зураг хасах", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { pickImage.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Зураг нэмэх (заавал биш)")
+                }
+            }
+            uiState.imageError?.let {
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
 
             uiState.card?.let { card ->
                 StatusChip(Leitner.status(card))

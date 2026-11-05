@@ -1,5 +1,6 @@
 package com.example.flashcard.ui.cards
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,6 +22,9 @@ data class CardEditUiState(
     val definition: String = "",
     val termError: String? = null,
     val definitionError: String? = null,
+    /** Заавал биш зураг. null бол зураггүй. */
+    val imagePath: String? = null,
+    val imageError: String? = null,
     /** Засварлаж буй картын одоогийн ахиц (зөвхөн харуулах). */
     val card: Card? = null,
     val savedCount: Int = 0,
@@ -39,6 +43,9 @@ class CardEditViewModel(
     var uiState by mutableStateOf(CardEditUiState(isNew = cardId == null, isLoading = cardId != null))
         private set
 
+    /** Өгөгдлийн санд хадгалагдсан зураг. Хадгалаагүй шинэ зургийг дэлгэцээс гарахад устгахад хэрэглэнэ. */
+    private var savedImagePath: String? = null
+
     init {
         if (cardId != null) {
             viewModelScope.launch {
@@ -47,8 +54,10 @@ class CardEditViewModel(
                     isLoading = false,
                     term = card?.term.orEmpty(),
                     definition = card?.definition.orEmpty(),
+                    imagePath = card?.imagePath,
                     card = card,
                 )
+                savedImagePath = card?.imagePath
             }
         }
     }
@@ -60,6 +69,31 @@ class CardEditViewModel(
 
     override fun onCleared() {
         pronunciation.stop()
+        discardUnsavedImage()
+    }
+
+    /** Галерейгаас сонгосон зургийг аппын хавтсанд хуулна. */
+    fun onImagePicked(uri: Uri) {
+        viewModelScope.launch {
+            val path = repository.saveImage(uri)
+            if (path == null) {
+                uiState = uiState.copy(imageError = "Зургийг уншиж чадсангүй")
+                return@launch
+            }
+            discardUnsavedImage()
+            uiState = uiState.copy(imagePath = path, imageError = null)
+        }
+    }
+
+    fun removeImage() {
+        discardUnsavedImage()
+        uiState = uiState.copy(imagePath = null, imageError = null)
+    }
+
+    // Сонгосон боловч хадгалаагүй зургийн файлыг устгана (хадгалсан зургийг repository устгадаг).
+    private fun discardUnsavedImage() {
+        val path = uiState.imagePath
+        if (path != savedImagePath) repository.deleteImage(path)
     }
 
     fun onTermChange(value: String) {
@@ -81,9 +115,11 @@ class CardEditViewModel(
             return
         }
         viewModelScope.launch {
-            repository.saveCard(deckId, cardId, term, definition)
+            repository.saveCard(deckId, cardId, term, definition, uiState.imagePath)
+            savedImagePath = uiState.imagePath
             uiState = if (addAnother && cardId == null) {
-                uiState.copy(term = "", definition = "", savedCount = uiState.savedCount + 1)
+                savedImagePath = null
+                uiState.copy(term = "", definition = "", imagePath = null, savedCount = uiState.savedCount + 1)
             } else {
                 uiState.copy(done = true)
             }
@@ -101,7 +137,10 @@ class CardEditViewModel(
     fun confirmDelete() {
         val id = cardId ?: return
         viewModelScope.launch {
+            discardUnsavedImage()
             repository.deleteCard(id)
+            savedImagePath = null
+            uiState = uiState.copy(imagePath = null)
             uiState = uiState.copy(showDeleteDialog = false, done = true)
         }
     }
