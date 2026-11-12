@@ -1,36 +1,34 @@
 package com.example.flashcard.ui.decks
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,14 +36,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flashcard.data.DeckSummary
 import com.example.flashcard.ui.AppViewModelProvider
+import com.example.flashcard.ui.components.BrandHeader
+import com.example.flashcard.ui.components.DeckTile
 import com.example.flashcard.ui.components.EmptyState
+import com.example.flashcard.ui.components.HeaderSearchField
 import com.example.flashcard.ui.components.LoadingBox
-import com.example.flashcard.ui.components.MasteryRing
+import com.example.flashcard.ui.components.MasteryGauge
+import com.example.flashcard.ui.components.RoundAddFab
+import com.example.flashcard.ui.components.SectionTitle
 import com.example.flashcard.ui.components.formatDate
 import com.example.flashcard.ui.theme.MasteredGreen
 import com.example.flashcard.ui.theme.ReviewRed
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeckListScreen(
     onDeckClick: (Long) -> Unit,
@@ -53,21 +55,35 @@ fun DeckListScreen(
     viewModel: DeckListViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    // Хайлт нь зөвхөн дэлгэцийн харагдах байдлын төлөв тул энд хадгална.
+    var searching by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val decks = if (query.isBlank()) uiState.decks
+    else uiState.decks.filter { it.name.contains(query.trim(), ignoreCase = true) }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = { Text("Deutsch Flashcards", fontWeight = FontWeight.Bold) },
-                scrollBehavior = scrollBehavior,
+            BrandHeader(
+                title = "Deutsch\nFlashcards",
+                actions = {
+                    IconButton(onClick = {
+                        searching = !searching
+                        if (!searching) query = ""
+                    }) {
+                        Icon(
+                            if (searching) Icons.Filled.Close else Icons.Filled.Search,
+                            contentDescription = if (searching) "Хайлт хаах" else "Хайх",
+                        )
+                    }
+                },
+                extra = if (searching) {
+                    { HeaderSearchField(query, { query = it }, placeholder = "Багц хайх") }
+                } else {
+                    null
+                },
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onAddDeck) {
-                Icon(Icons.Filled.Add, contentDescription = "Шинэ багц")
-            }
-        },
+        floatingActionButton = { RoundAddFab(onClick = onAddDeck, contentDescription = "Шинэ багц") },
     ) { padding ->
         when {
             uiState.isLoading -> LoadingBox(Modifier.padding(padding))
@@ -82,19 +98,18 @@ fun DeckListScreen(
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
-                    top = padding.calculateTopPadding() + 8.dp,
+                    top = padding.calculateTopPadding() + 16.dp,
                     bottom = padding.calculateBottomPadding() + 88.dp,
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                item {
-                    Text(
-                        "Миний багцууд",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                item { SectionTitle("Миний багцууд") }
+                if (decks.isEmpty()) {
+                    item {
+                        Text("Илэрц олдсонгүй.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
-                items(uiState.decks, key = { it.id }) { deck ->
+                items(decks, key = { it.id }) { deck ->
                     DeckRow(deck = deck, onClick = { onDeckClick(deck.id) }, modifier = Modifier.animateItem())
                 }
             }
@@ -104,62 +119,73 @@ fun DeckListScreen(
 
 @Composable
 private fun DeckRow(deck: DeckSummary, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    ElevatedCard(onClick = onClick, modifier = modifier.fillMaxWidth()) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            DeckAvatar(deck.name)
+            // Зүүн тал: дүрс + картын тоо (эсвэл "Шинэ!")
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                DeckTile(deck.name)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    if (deck.lastStudied == null) "Шинэ!" else "${deck.cardCount} карт",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (deck.lastStudied == null) FontWeight.Bold else FontWeight.Normal,
+                    color = if (deck.lastStudied == null) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     deck.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    "${deck.cardCount} карт",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    "Сүүлд: ${formatDate(deck.lastStudied)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                if (deck.lastStudied == null) {
+                    Text(
+                        "${deck.cardCount} карт",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    Text(
+                        "Сүүлд: ${formatDate(deck.lastStudied)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
                 // Basic stats: эзэмшсэн болон давтах картын тоо
                 Row {
                     Text(
-                        "Эзэмшсэн: ${deck.masteredCount}",
-                        style = MaterialTheme.typography.bodySmall,
+                        "✓ ${deck.masteredCount}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = MasteredGreen,
                     )
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        "Давтах: ${deck.reviewCount}",
-                        style = MaterialTheme.typography.bodySmall,
+                        "↻ ${deck.reviewCount} давтах",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = ReviewRed,
                     )
                 }
             }
-            MasteryRing(deck.masteryFraction)
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-        }
-    }
-}
-
-@Composable
-fun DeckAvatar(name: String, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.size(52.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                name.trim().take(1).uppercase().ifEmpty { "?" },
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+            if (deck.lastStudied != null || deck.cardCount > 0) {
+                MasteryGauge(deck.masteryFraction)
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

@@ -57,9 +57,10 @@ data class DeckSummary(
         get() = if (cardCount == 0) 0f else masteredCount.toFloat() / cardCount
 }
 
-/** Багц засах үед хадгалах картын ноорог. id == null бол шинэ карт. */
+/** Багц засах үед хадгалах картын ноорог. id == null бол шинэ карт, imagePath == null бол зураггүй. */
 data class CardDraft(
     val id: Long?,
     val term: String,
     val definition: String,
+    val imagePath: String? = null,
 )

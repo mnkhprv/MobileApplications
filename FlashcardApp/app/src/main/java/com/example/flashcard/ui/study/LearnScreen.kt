@@ -18,21 +18,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -55,7 +50,6 @@ import com.example.flashcard.data.SpeechStatus
 import com.example.flashcard.ui.theme.MasteredGreen
 import com.example.flashcard.ui.theme.ReviewRed
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LearnScreen(
     onBack: () -> Unit,
@@ -68,11 +62,10 @@ fun LearnScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Learn · ${state.deckName}") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Filled.Close, contentDescription = "Хаах") }
-                },
+            StudyHeader(
+                title = state.deckName,
+                onBack = onBack,
+                state = state.takeIf { !it.isLoading && !it.isFinished },
             )
         },
     ) { padding ->
@@ -132,8 +125,12 @@ private fun LearnContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        SessionProgress(state)
-        ElevatedCard(Modifier.fillMaxWidth()) {
+        ElevatedCard(
+            Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+        ) {
             Column(
                 Modifier
                     .fillMaxWidth()
@@ -148,7 +145,7 @@ private fun LearnContent(
                 }
                 Text("Deutsch", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(12.dp))
-                Text(card.term, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
+                Text(card.term, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val ready = speechStatus == SpeechStatus.READY
                     SpeakButton(ready, onClick = { onSpeak(card.term, false) }, iconSize = 32.dp)
@@ -164,6 +161,7 @@ private fun LearnContent(
             label = { Text("Монгол орчуулгыг бичнэ үү") },
             enabled = feedback == null,
             singleLine = true,
+            shape = RoundedCornerShape(14.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { if (feedback == null) onSubmit() else onNext() }),
         )
@@ -174,11 +172,11 @@ private fun LearnContent(
 
         if (feedback == null) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TextButton(onClick = onDontKnow, modifier = Modifier.weight(1f)) { Text("Мэдэхгүй") }
-                Button(onClick = onSubmit, enabled = answer.isNotBlank(), modifier = Modifier.weight(1f)) { Text("Шалгах") }
+                OutlinedButton(onClick = onDontKnow, modifier = Modifier.weight(1f).height(52.dp)) { Text("Мэдэхгүй") }
+                Button(onClick = onSubmit, enabled = answer.isNotBlank(), modifier = Modifier.weight(1f).height(52.dp)) { Text("Шалгах", fontWeight = FontWeight.SemiBold) }
             }
         } else {
-            Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onNext, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                 Text(if (state.index + 1 >= state.total) "Дуусгах" else "Дараах")
             }
         }
@@ -190,6 +188,7 @@ private fun FeedbackCard(feedback: LearnFeedback) {
     val color: Color = if (feedback.isCorrect) MasteredGreen else ReviewRed
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.12f)),
     ) {
         Column(Modifier.padding(16.dp)) {

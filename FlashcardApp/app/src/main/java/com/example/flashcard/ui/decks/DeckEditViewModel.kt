@@ -1,5 +1,6 @@
 package com.example.flashcard.ui.decks
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -17,9 +18,11 @@ data class DraftCardUi(
     val id: Long? = null,
     val term: String = "",
     val definition: String = "",
+    /** Заавал биш зураг (аппын дотоод хавтас дахь файлын зам). */
+    val imagePath: String? = null,
     val error: String? = null,
 ) {
-    val isBlank get() = term.isBlank() && definition.isBlank()
+    val isBlank get() = term.isBlank() && definition.isBlank() && imagePath == null
 }
 
 data class DeckEditUiState(
@@ -29,6 +32,7 @@ data class DeckEditUiState(
     val description: String = "",
     val nameError: String? = null,
     val cards: List<DraftCardUi> = emptyList(),
+    val imageError: String? = null,
     val showDeleteDialog: Boolean = false,
     val savedDeckId: Long? = null,
     val deleted: Boolean = false,
@@ -44,6 +48,10 @@ class DeckEditViewModel(
     var uiState by mutableStateOf(DeckEditUiState(isNew = deckId == null))
         private set
 
+    /** Өгөгдлийн санд аль хэдийн хадгалагдсан зургууд. Эдгээрийг repository хадгалах үед устгана. */
+    private var persistedImages: Set<String> = emptySet()
+    private var saved = false
+
     init {
         if (deckId == null) {
             uiState = uiState.copy(isLoading = false, cards = listOf(newDraft(), newDraft()))
@@ -55,8 +63,11 @@ class DeckEditViewModel(
                     isLoading = false,
                     name = deck?.name.orEmpty(),
                     description = deck?.description.orEmpty(),
-                    cards = cards.map { DraftCardUi(key = nextKey++, id = it.id, term = it.term, definition = it.definition) },
+                    cards = cards.map {
+                        DraftCardUi(key = nextKey++, id = it.id, term = it.term, definition = it.definition, imagePath = it.imagePath)
+                    },
                 )
+                persistedImages = cards.mapNotNull { it.imagePath }.toSet()
             }
         }
     }
@@ -80,7 +91,42 @@ class DeckEditViewModel(
     }
 
     fun removeCard(key: Long) {
+        discardUnsaved(uiState.cards.find { it.key == key }?.imagePath)
         uiState = uiState.copy(cards = uiState.cards.filterNot { it.key == key })
+    }
+
+    /** Галерейгаас сонгосон зургийг аппын хавтсанд хуулж, тухайн картад холбоно. */
+    fun onImagePicked(key: Long, uri: Uri) {
+        viewModelScope.launch {
+            val path = repository.saveImage(uri)
+            if (path == null) {
+                uiState = uiState.copy(imageError = "Зургийг уншиж чадсангүй")
+                return@launch
+            }
+            // Карт энэ хооронд хасагдсан бол шинэ файлыг хаяна.
+            if (uiState.cards.none { it.key == key }) {
+                repository.deleteImage(path)
+                return@launch
+            }
+            discardUnsaved(uiState.cards.find { it.key == key }?.imagePath)
+            uiState = uiState.copy(imageError = null)
+            updateCard(key) { it.copy(imagePath = path) }
+        }
+    }
+
+    fun removeImage(key: Long) {
+        discardUnsaved(uiState.cards.find { it.key == key }?.imagePath)
+        updateCard(key) { it.copy(imagePath = null) }
+    }
+
+    // Хадгалаагүй (шинээр сонгосон) зургийн файлыг устгана. Хадгалсан зургийг хадгалах үед repository устгана.
+    private fun discardUnsaved(path: String?) {
+        if (path != null && path !in persistedImages) repository.deleteImage(path)
+    }
+
+    override fun onCleared() {
+        // Хадгалалгүй гарсан бол сонгосон шинэ зургууд хэрэггүй болно.
+        if (!saved) uiState.cards.forEach { discardUnsaved(it.imagePath) }
     }
 
     private fun updateCard(key: Long, transform: (DraftCardUi) -> DraftCardUi) {
@@ -107,8 +153,12 @@ class DeckEditViewModel(
                 deckId = deckId,
                 name = name,
                 description = uiState.description.trim(),
-                cards = cards.filterNot { it.isBlank }.map { CardDraft(it.id, it.term.trim(), it.definition.trim()) },
+                cards = cards.filterNot { it.isBlank }
+                    .map { CardDraft(it.id, it.term.trim(), it.definition.trim(), it.imagePath) },
             )
+            saved = true
+            // Хоосон тул хадгалагдаагүй картын зургийг цэвэрлэнэ.
+            cards.filter { it.isBlank }.forEach { discardUnsaved(it.imagePath) }
             uiState = uiState.copy(savedDeckId = id)
         }
     }
@@ -125,6 +175,8 @@ class DeckEditViewModel(
         val id = deckId ?: return
         viewModelScope.launch {
             repository.deleteDeck(id)
+            uiState.cards.forEach { discardUnsaved(it.imagePath) }
+            saved = true
             uiState = uiState.copy(showDeleteDialog = false, deleted = true)
         }
     }

@@ -1,6 +1,8 @@
 package com.example.flashcard.ui.decks
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -8,37 +10,41 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,16 +52,24 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flashcard.data.Card as FlashCard
 import com.example.flashcard.data.DeckStats
 import com.example.flashcard.data.Leitner
-import com.example.flashcard.ui.AppViewModelProvider
-import com.example.flashcard.ui.components.LoadingBox
-import com.example.flashcard.ui.components.SpeakButton
-import com.example.flashcard.ui.components.VoiceMissingHint
 import com.example.flashcard.data.SpeechStatus
-import com.example.flashcard.ui.components.StatusChip
+import com.example.flashcard.ui.AppViewModelProvider
+import com.example.flashcard.ui.components.BrandHeader
+import com.example.flashcard.ui.components.CardImage
+import com.example.flashcard.ui.components.HeaderSearchField
+import com.example.flashcard.ui.components.LoadingBox
+import com.example.flashcard.ui.components.RoundAddFab
+import com.example.flashcard.ui.components.SectionTitle
+import com.example.flashcard.ui.components.SpeakButton
+import com.example.flashcard.ui.components.StatusDot
+import com.example.flashcard.ui.components.VoiceMissingHint
 import com.example.flashcard.ui.components.formatDate
 import com.example.flashcard.ui.theme.LearningAmber
 import com.example.flashcard.ui.theme.MasteredGreen
 import com.example.flashcard.ui.theme.ReviewRed
+
+private const val VIEW_LIST = 0
+private const val VIEW_CARDS = 1
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,30 +85,27 @@ fun DeckDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val deckId = viewModel.deckId
     val speechStatus by viewModel.speechStatus.collectAsStateWithLifecycle()
+    val speechReady = speechStatus == SpeechStatus.READY
+    var viewMode by rememberSaveable { mutableIntStateOf(VIEW_LIST) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(uiState.deck?.name.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Буцах")
-                    }
-                },
+            BrandHeader(
+                title = uiState.deck?.name.orEmpty(),
+                onBack = onBack,
                 actions = {
                     IconButton(onClick = { onEditDeck(deckId) }) {
                         Icon(Icons.Filled.Edit, contentDescription = "Багц засах")
                     }
                 },
+                extra = if (uiState.cards.isNotEmpty()) {
+                    { HeaderSearchField(uiState.query, viewModel::onQueryChange, placeholder = "Үг хайх") }
+                } else {
+                    null
+                },
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { onAddCard(deckId) }) {
-                Icon(Icons.Filled.Add, contentDescription = "Карт нэмэх")
-            }
-        },
+        floatingActionButton = { RoundAddFab(onClick = { onAddCard(deckId) }, contentDescription = "Карт нэмэх") },
     ) { padding ->
         if (uiState.isLoading) {
             LoadingBox(Modifier.padding(padding))
@@ -104,7 +115,7 @@ fun DeckDetailScreen(
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
-                top = padding.calculateTopPadding() + 8.dp,
+                top = padding.calculateTopPadding() + 16.dp,
                 bottom = padding.calculateBottomPadding() + 88.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -135,31 +146,22 @@ fun DeckDetailScreen(
             item { LeitnerBoxes(uiState.stats.boxCounts) }
             item {
                 Column {
-                Text(
-                    "Картууд (${uiState.cards.size})",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                VoiceMissingHint(speechStatus)
-                if (uiState.cards.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = uiState.query,
-                        onValueChange = viewModel::onQueryChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Хайх") },
-                        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                        trailingIcon = {
-                            if (uiState.query.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.onQueryChange("") }) {
-                                    Icon(Icons.Filled.Clear, contentDescription = "Цэвэрлэх")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        SectionTitle("Картууд (${uiState.cards.size})", Modifier.weight(1f))
+                        if (uiState.cards.isNotEmpty()) {
+                            SingleChoiceSegmentedButtonRow {
+                                listOf("Жагсаалт", "Карт").forEachIndexed { i, label ->
+                                    SegmentedButton(
+                                        selected = viewMode == i,
+                                        onClick = { viewMode = i },
+                                        shape = SegmentedButtonDefaults.itemShape(i, 2),
+                                        icon = {},
+                                    ) { Text(label, style = MaterialTheme.typography.labelMedium) }
                                 }
                             }
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(50),
-                    )
-                }
+                        }
+                    }
+                    VoiceMissingHint(speechStatus)
                 }
             }
             when {
@@ -172,14 +174,30 @@ fun DeckDetailScreen(
                 uiState.visibleCards.isEmpty() -> item {
                     Text("Илэрц олдсонгүй.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                else -> items(uiState.visibleCards, key = { it.id }) { card ->
-                    CardRow(
-                        card = card,
-                        speechReady = speechStatus == SpeechStatus.READY,
-                        onSpeak = { viewModel.speak(card.term) },
-                        onClick = { onEditCard(deckId, card.id) },
-                        modifier = Modifier.animateItem(),
+                viewMode == VIEW_CARDS -> item {
+                    CardCarousel(
+                        cards = uiState.visibleCards,
+                        speechReady = speechReady,
+                        onSpeak = viewModel::speak,
+                        onClick = { onEditCard(deckId, it) },
                     )
+                }
+                else -> item {
+                    WhiteCard {
+                        Column(Modifier.padding(vertical = 4.dp)) {
+                            uiState.visibleCards.forEachIndexed { index, card ->
+                                key(card.id) {
+                                    if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    WordRow(
+                                        card = card,
+                                        speechReady = speechReady,
+                                        onSpeak = { viewModel.speak(card.term) },
+                                        onClick = { onEditCard(deckId, card.id) },
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -187,8 +205,18 @@ fun DeckDetailScreen(
 }
 
 @Composable
+private fun WhiteCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) { content() }
+}
+
+@Composable
 private fun StatsCard(stats: DeckStats) {
-    ElevatedCard(Modifier.fillMaxWidth()) {
+    WhiteCard {
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
                 StatItem("Эзэмшсэн", stats.mastered, MasteredGreen)
@@ -198,10 +226,14 @@ private fun StatsCard(stats: DeckStats) {
             Spacer(Modifier.height(12.dp))
             LinearProgressIndicator(
                 progress = { stats.masteryFraction },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp),
                 color = MasteredGreen,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                drawStopIndicator = {},
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 "Эзэмшилт ${(stats.masteryFraction * 100).toInt()}% · нийт ${stats.total} карт",
                 style = MaterialTheme.typography.bodySmall,
@@ -223,19 +255,27 @@ private fun StatItem(label: String, value: Int, color: Color) {
 private fun StudyModes(enabled: Boolean, dueCount: Int, onFlashcards: () -> Unit, onLearn: () -> Unit) {
     Column {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = onFlashcards, enabled = enabled, modifier = Modifier.weight(1f)) {
-                Text("Flashcards")
-            }
-            FilledTonalButton(onClick = onLearn, enabled = enabled, modifier = Modifier.weight(1f)) {
-                Text("Learn")
-            }
+            Button(
+                onClick = onFlashcards,
+                enabled = enabled,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+            ) { Text("Flashcards", fontWeight = FontWeight.SemiBold) }
+            FilledTonalButton(
+                onClick = onLearn,
+                enabled = enabled,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+            ) { Text("Learn", fontWeight = FontWeight.SemiBold) }
         }
         if (enabled) {
             Text(
                 "Одоо давтах карт: $dueCount",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 6.dp, start = 4.dp),
             )
         }
     }
@@ -245,19 +285,19 @@ private fun StudyModes(enabled: Boolean, dueCount: Int, onFlashcards: () -> Unit
 @Composable
 private fun LeitnerBoxes(boxCounts: List<Int>) {
     Column {
-        Text("Leitner хайрцаг", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.height(8.dp))
+        SectionTitle("Leitner хайрцаг")
+        Spacer(Modifier.height(6.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             boxCounts.forEachIndexed { index, count ->
                 val box = index + 1
-                Card(Modifier.weight(1f)) {
+                WhiteCard(Modifier.weight(1f)) {
                     Column(
                         Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("$box", style = MaterialTheme.typography.labelSmall)
+                        Text("$box", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         Text("$count", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(
                             Leitner.intervalDays(box).let { if (it == 0) "үргэлж" else "${it}өдөр" },
@@ -271,37 +311,128 @@ private fun LeitnerBoxes(boxCounts: List<Int>) {
     }
 }
 
+/** Зураг 1-ийн "Word List"-ийн нэг мөр: үг + дуудлага | төлөвийн цэг. */
 @Composable
-private fun CardRow(
+private fun WordRow(
     card: FlashCard,
     speechReady: Boolean,
     onSpeak: () -> Unit,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    OutlinedCard(onClick = onClick, modifier = modifier.fillMaxWidth()) {
-        Row(Modifier.padding(start = 4.dp, end = 16.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            SpeakButton(speechReady, onClick = onSpeak)
-            Column(Modifier.weight(1f)) {
-                Text(card.term, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(start = 16.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    card.definition,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
+                    card.term,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
+                SpeakButton(speechReady, onClick = onSpeak, iconSize = 18.dp, modifier = Modifier.size(36.dp))
+                if (card.imagePath != null) {
+                    Text("🖼", style = MaterialTheme.typography.labelMedium)
+                }
             }
-            Spacer(Modifier.width(8.dp))
-            Column(horizontalAlignment = Alignment.End) {
-                StatusChip(Leitner.status(card))
-                Text(
-                    "Хайрцаг ${card.box}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
+            Text(
+                card.definition,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        VerticalDivider(
+            Modifier
+                .height(28.dp)
+                .padding(horizontal = 10.dp),
+        )
+        Box(Modifier.width(104.dp)) {
+            StatusDot(Leitner.status(card))
+        }
+    }
+}
+
+/** Зураг 1-ийн "List of Cards": зурагтай том картуудыг хажуу тийш гүйлгэж үзнэ. */
+@Composable
+private fun CardCarousel(
+    cards: List<FlashCard>,
+    speechReady: Boolean,
+    onSpeak: (String) -> Unit,
+    onClick: (Long) -> Unit,
+) {
+    val pagerState = rememberPagerState { cards.size }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(horizontal = 24.dp),
+            pageSpacing = 12.dp,
+            key = { cards[it].id },
+        ) { page ->
+            val card = cards[page]
+            Card(
+                onClick = { onClick(card.id) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(380.dp),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            ) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (card.imagePath != null) {
+                            CardImage(card.imagePath, Modifier.fillMaxWidth())
+                        } else {
+                            Text("🗂️", style = MaterialTheme.typography.displayMedium)
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            card.term,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            textAlign = TextAlign.Center,
+                        )
+                        SpeakButton(speechReady, onClick = { onSpeak(card.term) })
+                    }
+                    Text(
+                        card.definition,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    StatusDot(Leitner.status(card))
+                }
             }
         }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "${pagerState.currentPage + 1} / ${cards.size}",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

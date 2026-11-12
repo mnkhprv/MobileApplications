@@ -34,13 +34,18 @@ class FlashcardRepository(
 
     /**
      * Багц болон түүний картуудыг нэг transaction-д хадгална.
-     * Хуучин картын term/definition шинэчлэгдэж, ахиц (box, needsReview) нь хэвээр үлдэнэ.
+     * Хуучин картын term/definition/зураг шинэчлэгдэж, ахиц (box, needsReview) нь хэвээр үлдэнэ.
      * Жагсаалтаас хасагдсан карт (зурагтайгаа) устна, шинэ карт 1-р хайрцагт орно.
+     * Солигдсон/хасагдсан хуучин зургийн файлыг хадгалсны дараа устгана.
      */
     suspend fun saveDeck(deckId: Long?, name: String, description: String, cards: List<CardDraft>): Long {
         val keepIds = cards.mapNotNull { it.id }.toSet()
-        val removedImages = if (deckId == null) emptyList() else
-            cardDao.getCards(deckId).filter { it.id !in keepIds }.mapNotNull { it.imagePath }
+        val existing = if (deckId == null) emptyList() else cardDao.getCards(deckId)
+        val draftImages = cards.associate { it.id to it.imagePath }
+        val obsoleteImages = existing.mapNotNull { card ->
+            val stillUsed = card.id in keepIds && draftImages[card.id] == card.imagePath
+            card.imagePath.takeUnless { stillUsed }
+        }
         val savedId = db.withTransaction {
             val id = if (deckId == null) {
                 deckDao.insert(Deck(name = name, description = description))
@@ -51,14 +56,17 @@ class FlashcardRepository(
             cardDao.deleteOthers(id, keepIds.toList())
             cards.forEach { draft ->
                 if (draft.id == null) {
-                    cardDao.insert(Card(deckId = id, term = draft.term, definition = draft.definition))
+                    cardDao.insert(
+                        Card(deckId = id, term = draft.term, definition = draft.definition, imagePath = draft.imagePath),
+                    )
                 } else {
                     cardDao.updateContent(draft.id, draft.term, draft.definition)
+                    cardDao.updateImage(draft.id, draft.imagePath)
                 }
             }
             id
         }
-        removedImages.forEach(images::delete)
+        obsoleteImages.forEach(images::delete)
         return savedId
     }
 

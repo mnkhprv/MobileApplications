@@ -5,7 +5,11 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
+import com.example.flashcard.ui.components.BrandHeader
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,11 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +29,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -45,7 +46,6 @@ import com.example.flashcard.ui.components.errorText
 import com.example.flashcard.ui.components.StatusChip
 import com.example.flashcard.ui.components.formatDate
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardEditScreen(
     onBack: () -> Unit,
@@ -65,13 +65,9 @@ fun CardEditScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(if (uiState.isNew) "Шинэ карт" else "Карт засах") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Буцах")
-                    }
-                },
+            BrandHeader(
+                title = if (uiState.isNew) "Шинэ карт" else "Карт засах",
+                onBack = onBack,
                 actions = {
                     if (!uiState.isNew) {
                         IconButton(onClick = viewModel::requestDelete) {
@@ -92,7 +88,7 @@ fun CardEditScreen(
                 .padding(padding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             OutlinedTextField(
@@ -102,6 +98,8 @@ fun CardEditScreen(
                 label = { Text("Герман үг (term) *") },
                 isError = uiState.termError != null,
                 supportingText = errorText(uiState.termError),
+                shape = RoundedCornerShape(14.dp),
+                singleLine = true,
                 trailingIcon = { SpeakButton(speechStatus == SpeechStatus.READY && uiState.term.isNotBlank(), onClick = viewModel::speakTerm) },
             )
             OutlinedTextField(
@@ -112,6 +110,7 @@ fun CardEditScreen(
                 isError = uiState.definitionError != null,
                 supportingText = errorText(uiState.definitionError),
                 minLines = 3,
+                shape = RoundedCornerShape(14.dp),
             )
 
             // Зураг заавал биш.
@@ -131,7 +130,7 @@ fun CardEditScreen(
                     onClick = { pickImage.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Зураг нэмэх (заавал биш)")
+                    Text("🖼  Зураг нэмэх (заавал биш)")
                 }
             }
             uiState.imageError?.let {
@@ -154,11 +153,11 @@ fun CardEditScreen(
                 )
             }
 
-            Button(onClick = { viewModel.save() }, modifier = Modifier.fillMaxWidth()) {
-                Text("Хадгалах")
+            Button(onClick = { viewModel.save() }, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                Text("Хадгалах", fontWeight = FontWeight.SemiBold)
             }
             if (uiState.isNew) {
-                OutlinedButton(onClick = { viewModel.save(addAnother = true) }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = { viewModel.save(addAnother = true) }, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                     Text("Хадгалаад дараагийн карт нэмэх")
                 }
             }
