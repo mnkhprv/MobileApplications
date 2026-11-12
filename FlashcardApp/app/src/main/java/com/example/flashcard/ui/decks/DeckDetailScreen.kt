@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -31,11 +33,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -70,6 +72,7 @@ import com.example.flashcard.ui.theme.ReviewRed
 
 private const val VIEW_LIST = 0
 private const val VIEW_CARDS = 1
+private val SECTION_GAP = 12.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,11 +121,12 @@ fun DeckDetailScreen(
                 top = padding.calculateTopPadding() + 16.dp,
                 bottom = padding.calculateBottomPadding() + 88.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            // spacedBy ашиглахгүй: картын мөр бүр тусдаа item бөгөөд хоорондоо зайгүй нэг жагсаалт
+            // шиг харагдах ёстой. Бусад хэсгийн зайг item бүрийн доод padding (SECTION_GAP)-аар өгнө.
         ) {
             uiState.deck?.let { deck ->
                 item {
-                    Column {
+                    Column(Modifier.padding(bottom = SECTION_GAP)) {
                         if (deck.description.isNotBlank()) {
                             Text(deck.description, style = MaterialTheme.typography.bodyLarge)
                         }
@@ -134,18 +138,20 @@ fun DeckDetailScreen(
                     }
                 }
             }
-            item { StatsCard(uiState.stats) }
+            item { Box(Modifier.padding(bottom = SECTION_GAP)) { StatsCard(uiState.stats) } }
             item {
-                StudyModes(
-                    enabled = uiState.cards.isNotEmpty(),
-                    dueCount = uiState.dueCount,
-                    onFlashcards = { onFlashcards(deckId) },
-                    onLearn = { onLearn(deckId) },
-                )
+                Box(Modifier.padding(bottom = SECTION_GAP)) {
+                    StudyModes(
+                        enabled = uiState.cards.isNotEmpty(),
+                        dueCount = uiState.dueCount,
+                        onFlashcards = { onFlashcards(deckId) },
+                        onLearn = { onLearn(deckId) },
+                    )
+                }
             }
-            item { LeitnerBoxes(uiState.stats.boxCounts) }
+            item { Box(Modifier.padding(bottom = SECTION_GAP)) { LeitnerBoxes(uiState.stats.boxCounts) } }
             item {
-                Column {
+                Column(Modifier.padding(bottom = 8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         SectionTitle("Картууд (${uiState.cards.size})", Modifier.weight(1f))
                         if (uiState.cards.isNotEmpty()) {
@@ -182,22 +188,17 @@ fun DeckDetailScreen(
                         onClick = { onEditCard(deckId, it) },
                     )
                 }
-                else -> item {
-                    WhiteCard {
-                        Column(Modifier.padding(vertical = 4.dp)) {
-                            uiState.visibleCards.forEachIndexed { index, card ->
-                                key(card.id) {
-                                    if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                                    WordRow(
-                                        card = card,
-                                        speechReady = speechReady,
-                                        onSpeak = { viewModel.speak(card.term) },
-                                        onClick = { onEditCard(deckId, card.id) },
-                                    )
-                                }
-                            }
-                        }
-                    }
+                // Шаардлага: картын жагсаалт LazyColumn-ийн item бүрээр (зөвхөн дэлгэцэнд харагдах мөрүүд зурагдана).
+                else -> itemsIndexed(uiState.visibleCards, key = { _, card -> card.id }) { index, card ->
+                    WordRow(
+                        card = card,
+                        isFirst = index == 0,
+                        isLast = index == uiState.visibleCards.lastIndex,
+                        speechReady = speechReady,
+                        onSpeak = { viewModel.speak(card.term) },
+                        onClick = { onEditCard(deckId, card.id) },
+                        modifier = Modifier.animateItem(),
+                    )
                 }
             }
         }
@@ -311,51 +312,79 @@ private fun LeitnerBoxes(boxCounts: List<Int>) {
     }
 }
 
-/** Зураг 1-ийн "Word List"-ийн нэг мөр: үг + дуудлага | төлөвийн цэг. */
+/**
+ * Зураг 1-ийн "Word List"-ийн нэг мөр: үг + дуудлага | төлөвийн цэг.
+ * Мөр бүр LazyColumn-ийн тусдаа item. Зэргэлдээ мөрүүд нэг цагаан карт шиг харагдахын тулд
+ * зөвхөн эхний мөрийн дээд, сүүлийн мөрийн доод булангуудыг бөөрөнхийлнө.
+ */
 @Composable
 private fun WordRow(
     card: FlashCard,
+    isFirst: Boolean,
+    isLast: Boolean,
     speechReady: Boolean,
     onSpeak: () -> Unit,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(start = 16.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    val radius = 20.dp
+    val shape = RoundedCornerShape(
+        topStart = if (isFirst) radius else 0.dp,
+        topEnd = if (isFirst) radius else 0.dp,
+        bottomStart = if (isLast) radius else 0.dp,
+        bottomEnd = if (isLast) radius else 0.dp,
+    )
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    card.term,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
+        Column {
+            if (!isFirst) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onClick)
+                    .padding(
+                        start = 16.dp,
+                        end = 12.dp,
+                        top = if (isFirst) 10.dp else 6.dp,
+                        bottom = if (isLast) 10.dp else 6.dp,
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            card.term,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                        SpeakButton(speechReady, onClick = onSpeak, iconSize = 18.dp, modifier = Modifier.size(36.dp))
+                        if (card.imagePath != null) {
+                            Text("🖼", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                    Text(
+                        card.definition,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                VerticalDivider(
+                    Modifier
+                        .height(28.dp)
+                        .padding(horizontal = 10.dp),
                 )
-                SpeakButton(speechReady, onClick = onSpeak, iconSize = 18.dp, modifier = Modifier.size(36.dp))
-                if (card.imagePath != null) {
-                    Text("🖼", style = MaterialTheme.typography.labelMedium)
+                Box(Modifier.width(104.dp)) {
+                    StatusDot(Leitner.status(card))
                 }
             }
-            Text(
-                card.definition,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        VerticalDivider(
-            Modifier
-                .height(28.dp)
-                .padding(horizontal = 10.dp),
-        )
-        Box(Modifier.width(104.dp)) {
-            StatusDot(Leitner.status(card))
         }
     }
 }
