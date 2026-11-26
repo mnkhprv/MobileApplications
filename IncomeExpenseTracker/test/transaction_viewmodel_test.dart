@@ -1,14 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:income_expense_tracker/core/formatters.dart';
-import 'package:income_expense_tracker/models/transaction.dart';
-import 'package:income_expense_tracker/services/transaction_service.dart';
-import 'package:income_expense_tracker/viewmodels/transaction_viewmodel.dart';
+import 'package:income_expense_tracker/business/services/add_transaction_service.dart';
+import 'package:income_expense_tracker/business/services/list_transactions_service.dart';
+import 'package:income_expense_tracker/domain/domain.dart';
+import 'package:income_expense_tracker/infrastructure/repositories/in_memory/in_memory_repos.dart';
+import 'package:income_expense_tracker/infrastructure/repositories/in_memory/seed.dart';
+import 'package:income_expense_tracker/presentation/core/formatters.dart';
+import 'package:income_expense_tracker/presentation/viewmodels/transaction_viewmodel.dart';
 
 void main() {
   group('TransactionViewModel', () {
     late TransactionViewModel vm;
 
-    setUp(() => vm = TransactionViewModel(InMemoryTransactionService()));
+    setUp(() {
+      final repo = InMemoryTransactionRepo();
+      seedDemoData(transactions: repo, bills: InMemoryBillRepo(), now: DateTime.now());
+      vm = TransactionViewModel(ListTransactionsService(repo), AddTransactionService(repo));
+    });
+
+    tearDown(() => vm.dispose());
 
     test('loads seed data newest first and computes totals', () async {
       await vm.load();
@@ -18,17 +27,35 @@ void main() {
       expect(vm.balance, closeTo(2159.01, 1e-9));
     });
 
-    test('adding an expense updates the list and totals', () async {
+    test('adding an expense updates the list and totals through the stream', () async {
       await vm.load();
-      await vm.add(Transaction(
-        id: 'new',
-        title: 'Хоол',
-        amount: 20,
-        type: TransactionType.expense,
-        date: DateTime.now().add(const Duration(minutes: 1)),
-      ));
+      expect(
+        await vm.add(Transaction(
+          id: 'new',
+          title: 'Хоол',
+          amount: 20,
+          type: TransactionType.expense,
+          date: DateTime.now().add(const Duration(minutes: 1)),
+        )),
+        isTrue,
+      );
+      await Future<void>.delayed(Duration.zero); // let the stream deliver
       expect(vm.transactions.first.title, 'Хоол');
       expect(vm.totalExpense, closeTo(116.99, 1e-9));
+    });
+
+    test('a rejected transaction sets an error and changes nothing', () async {
+      await vm.load();
+      final ok = await vm.add(Transaction(
+        id: 'bad',
+        title: 'Хоол',
+        amount: 0,
+        type: TransactionType.expense,
+        date: DateTime.now(),
+      ));
+      expect(ok, isFalse);
+      expect(vm.errorMessage, 'Дүн 0-ээс их байх ёстой');
+      expect(vm.transactions, hasLength(4));
     });
   });
 

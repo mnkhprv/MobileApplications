@@ -1,0 +1,26 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "incomeexpensetrackerflutter",
+          "appId": "1:1059623368944:android:f071124dc7b2510497aa35",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "incomeexpensetrackerflutter",
+          "configurations": {
+            "android": "1:1059623368944:android:f071124dc7b2510497aa35",
+            "ios": "1:1059623368944:ios:639a270fc54f9a0a97aa35",
+            "web": "1:1059623368944:web:3e9323ae6fe89d4897aa35"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

@@ -1,11 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:income_expense_tracker/services/auth_service.dart';
-import 'package:income_expense_tracker/viewmodels/auth_viewmodel.dart';
+import 'package:income_expense_tracker/business/services/login_service.dart';
+import 'package:income_expense_tracker/business/services/register_service.dart';
+import 'package:income_expense_tracker/infrastructure/repositories/in_memory/in_memory_repos.dart';
+import 'package:income_expense_tracker/presentation/viewmodels/auth_viewmodel.dart';
 
 void main() {
   late AuthViewModel vm;
 
-  setUp(() => vm = AuthViewModel(InMemoryAuthService()));
+  late InMemoryAuthRepo auth;
+
+  setUp(() {
+    auth = InMemoryAuthRepo();
+    vm = AuthViewModel(RegisterService(auth), LoginService(auth));
+  });
 
   test('register then login signs the user in', () async {
     expect(await vm.register(fullName: 'Бат', email: 'bat@mail.mn', password: 'secret1'), isTrue);
@@ -27,6 +34,22 @@ void main() {
     await vm.register(fullName: 'Бат', email: 'bat@mail.mn', password: 'secret1');
     expect(await vm.register(fullName: 'Болд', email: 'bat@mail.mn', password: 'secret2'), isFalse);
     expect(vm.errorMessage, 'Энэ имэйлээр бүртгэл үүссэн байна');
+  });
+
+  test('register checks name and password length before calling the backend', () async {
+    expect(await vm.register(fullName: ' ', email: 'a@mail.mn', password: 'secret1'), isFalse);
+    expect(vm.errorMessage, 'Нэрээ оруулна уу');
+    expect(await vm.register(fullName: 'Бат', email: 'a@mail.mn', password: '123'), isFalse);
+    expect(vm.errorMessage, 'Нууц үг хамгийн багадаа 6 тэмдэгт');
+  });
+
+  test('logout ends the session; a remembered session is picked up at start', () async {
+    await vm.register(fullName: 'Бат', email: 'bat@mail.mn', password: 'secret1');
+    await vm.login(email: 'bat@mail.mn', password: 'secret1');
+    expect(AuthViewModel(RegisterService(auth), LoginService(auth)).isLoggedIn, isTrue);
+    await vm.logout();
+    expect(vm.isLoggedIn, isFalse);
+    expect(auth.currentUser, isNull);
   });
 
   test('isLoading is true while a request runs', () async {
